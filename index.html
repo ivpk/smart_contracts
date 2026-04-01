@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>data.gov.lt – demonstracinė sutarčių valdymo aplinka</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .card-hover:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-950">
+  <div class="mx-auto max-w-7xl p-6 md:p-8">
+    <header class="mb-6 rounded-3xl border bg-white p-4 shadow-sm">
+      <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <button id="homeBtn" class="flex items-center gap-3 text-left">
+          <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white">
+            <span class="text-sm font-bold">DG</span>
+          </div>
+          <div>
+            <div class="text-sm text-slate-500">data.gov.lt</div>
+            <h1 class="text-2xl font-semibold tracking-tight">Sutarčių valdymo demonstracinė aplinka</h1>
+          </div>
+        </button>
+
+        <div class="flex flex-1 flex-col gap-3 lg:max-w-2xl lg:flex-row lg:items-center lg:justify-end">
+          <div class="relative w-full lg:max-w-md">
+            <input id="searchInput" type="text" placeholder="Ieškoti sutarčių, organizacijų, veiksmų..." class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:border-slate-400 focus:outline-none" />
+          </div>
+          <button class="rounded-2xl border px-4 py-2 text-sm font-medium">Pranešimai <span class="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs">4</span></button>
+          <div class="flex items-center gap-3 rounded-2xl border px-3 py-2">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold">MM</div>
+            <div class="leading-tight">
+              <div class="text-sm font-medium">Martynas Mockus</div>
+              <div class="text-xs text-slate-500">Duomenų gavėjo atstovas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="mb-6 rounded-3xl bg-gradient-to-r from-slate-900 to-slate-700 p-6 text-white shadow-lg">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-2xl font-semibold">🚀 Demonstracinė UX aplinka</h2>
+          <p class="mt-1 text-sm text-slate-200">Interaktyvus prototipas vartotojų testavimui – spauskite elementus ir stebėkite click flow.</p>
+        </div>
+        <div class="flex gap-2">
+          <span class="rounded-full bg-white/10 px-3 py-1 text-xs">No backend</span>
+          <span class="rounded-full bg-white/10 px-3 py-1 text-xs">UX test ready</span>
+          <span class="rounded-full bg-white/10 px-3 py-1 text-xs">GitHub Pages</span>
+        </div>
+      </div>
+    </section>
+
+    <main id="app"></main>
+  </div>
+
+  <script>
+    const state = {
+      search: "",
+      onlyUrgent: false,
+      activeView: "all",
+      route: { screen: "dashboard" },
+      selectedFlow: {
+        title: "Pasirinkite veiksmą",
+        steps: [
+          "Spauskite KPI korteles, užduotis, juodraščius ar greitus veiksmus.",
+          "Ši versija yra paruošta GitHub Pages demonstracijai be build žingsnio.",
+        ],
+      },
+    };
+
+    const tasksSeed = [
+      { id: "DUOM-123", title: "Gyventojų registro duomenų teikimo sutartis", action: "Patvirtinti", due: "2026-04-05", priority: "Aukštas", status: "Derinama", urgent: true },
+      { id: "DUOM-118", title: "Transporto srautų duomenų teikimo sutartis", action: "Atsakyti į komentarus", due: "2026-04-07", priority: "Vidutinis", status: "Tikslinama", urgent: true },
+      { id: "DUOM-110", title: "Socialinės paramos duomenų perdavimo sutartis", action: "Peržiūrėti", due: "2026-04-10", priority: "Žemas", status: "Pateikta derinimui", urgent: false },
+    ];
+
+    const draftsSeed = [
+      { id: "DRAFT-031", title: "Jur. asmenų registro duomenų sutartis", step: "3 iš 6 žingsnių", updated: "Prieš 2 val.", completion: 48 },
+      { id: "DRAFT-028", title: "Švietimo duomenų mainų sutartis", step: "1 iš 6 žingsnių", updated: "Vakar", completion: 18 },
+    ];
+
+    const activitySeed = [
+      { id: 1, text: "Gauta pastaba sutartyje DUOM-118", meta: "Prieš 12 min. • Komentarai", type: "comment", contractId: "DUOM-118" },
+      { id: 2, text: "Jonas Petrauskas patvirtino DUOM-120", meta: "Prieš 39 min. • Būsena pakeista", type: "approved", contractId: "DUOM-123" },
+      { id: 3, text: "DUOM-105 perėjo į būseną „Derinama“", meta: "Šiandien 09:14 • Workflow", type: "progress", contractId: "DUOM-110" },
+      { id: 4, text: "Parengtas naujas šablonas savivaldybių duomenims", meta: "Vakar • Šablonai", type: "template", contractId: null },
+    ];
+
+    const deadlinesSeed = [
+      { id: "DUOM-101", title: "Finansinių ataskaitų duomenų sutartis", eta: "Baigiasi po 3 dienų", severity: "critical" },
+      { id: "DUOM-089", title: "Adresų registro duomenų sutartis", eta: "Baigiasi po 5 dienų", severity: "warning" },
+    ];
+
+    const kpisSeed = [
+      { key: "drafts", label: "Mano juodraščiai", value: 3, subtext: "Neužbaigtos sutartys", cta: "Tęsti" },
+      { key: "action", label: "Laukia mano veiksmo", value: 5, subtext: "Reikia peržiūros ar sprendimo", cta: "Peržiūrėti" },
+      { key: "review", label: "Derinamos sutartys", value: 8, subtext: "Šiuo metu procese", cta: "Atidaryti sąrašą" },
+      { key: "deadline", label: "Artėja terminai", value: 2, subtext: "Per 7 dienas", cta: "Rodyti skubius" },
+    ];
+
+    const templates = [
+      "Bazinė duomenų teikimo sutartis",
+      "Savivaldybių duomenų teikimo sutartis",
+      "Vienkartinio duomenų perdavimo sutartis",
+    ];
+
+    function badgeTone(priority) {
+      if (priority === "Aukštas") return "bg-red-100 text-red-800";
+      if (priority === "Vidutinis") return "bg-slate-200 text-slate-800";
+      return "bg-white text-slate-700 border border-slate-200";
+    }
+
+    function statusTone(status) {
+      if (status === "Derinama") return "bg-amber-100 text-amber-900";
+      if (status === "Tikslinama") return "bg-orange-100 text-orange-900";
+      if (status === "Pateikta derinimui") return "bg-blue-100 text-blue-900";
+      return "bg-slate-100 text-slate-800";
+    }
+
+    function deadlineTone(severity) {
+      return severity === "critical" ? "bg-red-100 text-red-800" : "bg-slate-200 text-slate-800";
+    }
+
+    function filteredTasks() {
+      return tasksSeed.filter((task) => {
+        const q = state.search.toLowerCase();
+        const matchesSearch = task.id.toLowerCase().includes(q) || task.title.toLowerCase().includes(q) || task.action.toLowerCase().includes(q);
+        const matchesUrgent = state.onlyUrgent ? task.urgent : true;
+        const matchesView = state.activeView === "all" ? true : state.activeView === "urgent" ? task.urgent : task.status === "Tikslinama";
+        return matchesSearch && matchesUrgent && matchesView;
+      });
+    }
+
+    function setFlow(title, steps) {
+      state.selectedFlow = { title, steps };
+    }
+
+    function goHome() {
+      state.route = { screen: "dashboard" };
+      render();
+    }
+
+    function openList(mode) {
+      setFlow("Kelias: Sąrašas", [
+        "Vartotojas paspaudžia KPI kortelę.",
+        "Sistema rodo filtruotą sąrašą.",
+        "Iš sąrašo vartotojas atsidaro konkretų įrašą.",
+      ]);
+      state.route = { screen: "list", mode };
+      render();
+    }
+
+    function openContract(contractId, tab = "overview") {
+      setFlow(`Kelias: ${contractId}`, [
+        "Vartotojas paspaudžia konkretų įrašą dashboard'e arba sąraše.",
+        "Sistema atidaro sutarties detalų vaizdą.",
+        `Aktyvus skirtukas: ${tab === "comments" ? "Komentarai" : tab === "history" ? "Istorija" : tab === "documents" ? "Dokumentai" : "Apžvalga"}.`,
+      ]);
+      state.route = { screen: "contract", contractId, tab };
+      render();
+    }
+
+    function openDraft(draftId) {
+      setFlow(`Kelias: ${draftId}`, [
+        "Vartotojas pasirenka juodraštį.",
+        "Sistema grąžina į vedlį toje vietoje, kur buvo sustota.",
+        "Po peržiūros galima tęsti arba pateikti derinimui.",
+      ]);
+      state.route = { screen: "wizard", source: "draft", draftId };
+      render();
+    }
+
+    function openWizard(source) {
+      setFlow("Kelias: Naujos sutarties inicijavimas", [
+        "Vartotojas pasirenka kūrimo būdą.",
+        "Atsidaro vedlio 1 žingsnis.",
+        "Toliau judama į peržiūrą arba išsaugoma kaip juodraštis.",
+      ]);
+      state.route = { screen: "wizard", source };
+      render();
+    }
+
+    function dashboardView() {
+      const taskRows = filteredTasks().map((task) => `
+        <div class="grid gap-3 rounded-2xl border p-4 md:grid-cols-[120px_1.5fr_170px_120px_120px] md:items-center">
+          <div>
+            <div class="text-xs uppercase tracking-wide text-slate-500">Sutartis</div>
+            <div class="font-semibold">${task.id}</div>
+          </div>
+          <div>
+            <div class="font-medium">${task.title}</div>
+            <div class="mt-1 flex flex-wrap gap-2">
+              <span class="rounded-full px-2.5 py-1 text-xs font-medium ${statusTone(task.status)}">${task.status}</span>
+              <span class="rounded-full px-2.5 py-1 text-xs font-medium ${badgeTone(task.priority)}">${task.priority}</span>
+            </div>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-wide text-slate-500">Veiksmas</div>
+            <div class="font-medium">${task.action}</div>
+          </div>
+          <div>
+            <div class="text-xs uppercase tracking-wide text-slate-500">Terminas</div>
+            <div class="font-medium">${task.due}</div>
+          </div>
+          <div class="flex md:justify-end">
+            <button onclick="openContract('${task.id}','comments')" class="w-full rounded-2xl bg-slate-900 px-4 py-2.5 text-white md:w-auto">Atidaryti</button>
+          </div>
+        </div>
+      `).join("") || `<div class="rounded-2xl border border-dashed p-8 text-center"><div class="text-lg font-medium">Nerasta atitinkančių užduočių</div><div class="mt-1 text-sm text-slate-500">Pakeiskite paiešką arba filtrus.</div></div>`;
+
+      const kpis = kpisSeed.map((kpi) => `
+        <button onclick="onKpiClick('${kpi.key}')" class="text-left">
+          <div class="card-hover h-full rounded-3xl bg-white p-5 shadow-sm transition-transform">
+            <div class="mb-4 flex items-start justify-between">
+              <div class="rounded-2xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">${kpi.key.toUpperCase().slice(0,3)}</div>
+              <div class="text-slate-400">›</div>
+            </div>
+            <div class="text-sm text-slate-500">${kpi.label}</div>
+            <div class="mt-1 text-3xl font-semibold">${kpi.value}</div>
+            <div class="mt-1 text-sm text-slate-500">${kpi.subtext}</div>
+            <div class="mt-4 text-sm font-medium">${kpi.cta}</div>
+          </div>
+        </button>
+      `).join("");
+
+      const deadlines = deadlinesSeed.map((item) => `
+        <button onclick="openContract('${item.id}','overview')" class="w-full rounded-2xl border p-3 text-left transition hover:bg-slate-50">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="font-medium">${item.id}</div>
+              <div class="text-sm text-slate-500">${item.title}</div>
+            </div>
+            <span class="rounded-full px-2.5 py-1 text-xs font-medium ${deadlineTone(item.severity)}">${item.eta}</span>
+          </div>
+        </button>
+      `).join("");
+
+      const drafts = draftsSeed.map((draft) => `
+        <button onclick="openDraft('${draft.id}')" class="w-full rounded-2xl border p-4 text-left transition hover:bg-slate-50">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <div class="font-medium">${draft.title}</div>
+              <div class="mt-1 text-sm text-slate-500">${draft.id} • ${draft.step}</div>
+            </div>
+            <span class="text-sm text-slate-500">${draft.updated}</span>
+          </div>
+          <div class="mt-4">
+            <div class="mb-2 flex items-center justify-between text-xs text-slate-500">
+              <span>Užpildymo progresas</span>
+              <span>${draft.completion}%</span>
+            </div>
+            <div class="h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-slate-900" style="width:${draft.completion}%"></div></div>
+          </div>
+        </button>
+      `).join("");
+
+      const activity = activitySeed.map((item) => `
+        <button onclick="${item.contractId ? `openContract('${item.contractId}','${item.type === "comment" ? "comments" : "history"}')` : `setFlow('Šablonų įvykis',['Vartotojas atsidarė šablonų kontekstą.','Čia vėliau galima prijungti šablonų sąrašą.']);render();`}" class="flex w-full items-start gap-3 rounded-2xl border p-3 text-left transition hover:bg-slate-50">
+          <div class="mt-0.5 rounded-xl bg-slate-100 px-2 py-2 text-xs font-semibold text-slate-600">${item.type === "comment" ? "C" : item.type === "approved" ? "OK" : item.type === "progress" ? "→" : "T"}</div>
+          <div>
+            <div class="font-medium">${item.text}</div>
+            <div class="mt-1 text-sm text-slate-500">${item.meta}</div>
+          </div>
+        </button>
+      `).join("");
+
+      const flow = `
+        <div class="rounded-3xl bg-white shadow-sm">
+          <div class="p-6 pb-3">
+            <h2 class="text-xl font-semibold">Click flow peržiūra</h2>
+            <p class="text-sm text-slate-500">Naudinga vartotojų testavimui ir stakeholderių walkthrough</p>
+          </div>
+          <div class="p-6 pt-0">
+            <div class="rounded-2xl bg-slate-50 p-4">
+              <div class="mb-3 text-sm font-medium text-slate-600">${state.selectedFlow.title}</div>
+              <ol class="space-y-3">${state.selectedFlow.steps.map((step, index) => `<li class="flex gap-3"><div class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold shadow-sm">${index + 1}</div><div class="pt-1 text-sm leading-6 text-slate-700">${step}</div></li>`).join("")}</ol>
+            </div>
+            <div class="mt-4 rounded-2xl border border-dashed p-4 text-sm text-slate-600">Prototipas dabar veda tarp kelių vaizdų: dashboard, sutarties detalė, sąrašas ir vedlys.</div>
+          </div>
+        </div>
+      `;
+
+      return `
+        <section class="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">${kpis}</section>
+        <section class="mb-6 grid gap-4 xl:grid-cols-[1.6fr_1fr_1fr]">
+          <div class="rounded-3xl bg-white shadow-sm xl:col-span-2">
+            <div class="flex flex-col gap-4 border-b p-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 class="text-xl font-semibold">Reikia jūsų veiksmo</h2>
+                <p class="mt-1 text-sm text-slate-500">Pagrindinė darbo zona kasdieniams veiksmams</p>
+              </div>
+              <div class="flex flex-wrap items-center gap-2">
+                <div class="flex rounded-2xl bg-slate-100 p-1">
+                  <button onclick="setActiveView('all')" class="rounded-xl px-4 py-2 text-sm font-medium ${state.activeView === 'all' ? 'bg-white shadow-sm' : 'text-slate-600'}">Visi</button>
+                  <button onclick="setActiveView('urgent')" class="rounded-xl px-4 py-2 text-sm font-medium ${state.activeView === 'urgent' ? 'bg-white shadow-sm' : 'text-slate-600'}">Skubūs</button>
+                  <button onclick="setActiveView('Tikslinama')" class="rounded-xl px-4 py-2 text-sm font-medium ${state.activeView === 'Tikslinama' ? 'bg-white shadow-sm' : 'text-slate-600'}">Tikslinama</button>
+                </div>
+                <button onclick="toggleUrgent()" class="rounded-2xl border px-4 py-2 text-sm font-medium ${state.onlyUrgent ? 'bg-slate-900 text-white' : ''}">Tik skubūs</button>
+              </div>
+            </div>
+            <div class="p-6"><div class="space-y-3">${taskRows}</div></div>
+          </div>
+          <div class="space-y-4">
+            <div class="rounded-3xl bg-white shadow-sm">
+              <div class="p-6 pb-3"><h2 class="text-xl font-semibold">Greiti veiksmai</h2></div>
+              <div class="grid gap-3 p-6 pt-0">
+                <button onclick="openWizard('blank')" class="flex items-center justify-between rounded-2xl bg-slate-900 px-4 py-4 text-left text-white"><span>+ Nauja sutartis</span><span>›</span></button>
+                <button onclick="openWizard('template')" class="flex items-center justify-between rounded-2xl border px-4 py-4 text-left"><span>Kurti pagal šabloną</span><span>›</span></button>
+                <button onclick="openWizard('copy')" class="flex items-center justify-between rounded-2xl border px-4 py-4 text-left"><span>Kopijuoti ankstesnę</span><span>›</span></button>
+              </div>
+            </div>
+            <div class="rounded-3xl bg-white shadow-sm">
+              <div class="p-6 pb-3"><h2 class="text-xl font-semibold">Artimiausi terminai</h2></div>
+              <div class="space-y-3 p-6 pt-0">${deadlines}</div>
+            </div>
+          </div>
+        </section>
+        <section class="grid gap-4 xl:grid-cols-[1fr_1fr_1.1fr]">
+          <div class="rounded-3xl bg-white shadow-sm"><div class="p-6 pb-3"><h2 class="text-xl font-semibold">Mano juodraščiai</h2></div><div class="space-y-4 p-6 pt-0">${drafts}</div></div>
+          <div class="rounded-3xl bg-white shadow-sm"><div class="p-6 pb-3"><h2 class="text-xl font-semibold">Naujausi pakeitimai</h2></div><div class="space-y-3 p-6 pt-0">${activity}</div></div>
+          ${flow}
+        </section>
+      `;
+    }
+
+    function contractView(contractId, tab) {
+      const task = tasksSeed.find((item) => item.id === contractId) || tasksSeed[0];
+      return `
+        <div class="space-y-6">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <button onclick="goHome()" class="mb-2 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">← Atgal į dashboard</button>
+              <h2 class="text-3xl font-semibold tracking-tight">${contractId}</h2>
+              <p class="mt-1 text-slate-500">${task.title}</p>
+            </div>
+            <div class="flex gap-2">
+              <span class="rounded-full px-2.5 py-1 text-xs font-medium ${statusTone(task.status)}">${task.status}</span>
+              <span class="rounded-full px-2.5 py-1 text-xs font-medium ${badgeTone(task.priority)}">${task.priority}</span>
+            </div>
+          </div>
+          <div class="rounded-3xl bg-white shadow-sm">
+            <div class="flex flex-col gap-4 border-b p-6 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h3 class="text-xl font-semibold">Sutarties detalus vaizdas</h3>
+                <p class="mt-1 text-sm text-slate-500">Testavimui skirta interaktyvi sutarties kortelė</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button class="rounded-2xl border px-4 py-2">Redaguoti</button>
+                <button class="rounded-2xl border px-4 py-2">Keisti būseną</button>
+                <button class="rounded-2xl bg-slate-900 px-4 py-2 text-white">Patvirtinti veiksmą</button>
+              </div>
+            </div>
+            <div class="p-6">
+              <div class="mb-6 flex rounded-2xl bg-slate-100 p-1 w-full max-w-[620px]">
+                <button onclick="openContract('${contractId}','overview')" class="rounded-xl px-4 py-2 text-sm font-medium ${tab === 'overview' ? 'bg-white shadow-sm' : 'text-slate-600'}">Apžvalga</button>
+                <button onclick="openContract('${contractId}','comments')" class="rounded-xl px-4 py-2 text-sm font-medium ${tab === 'comments' ? 'bg-white shadow-sm' : 'text-slate-600'}">Komentarai</button>
+                <button onclick="openContract('${contractId}','documents')" class="rounded-xl px-4 py-2 text-sm font-medium ${tab === 'documents' ? 'bg-white shadow-sm' : 'text-slate-600'}">Dokumentai</button>
+                <button onclick="openContract('${contractId}','history')" class="rounded-xl px-4 py-2 text-sm font-medium ${tab === 'history' ? 'bg-white shadow-sm' : 'text-slate-600'}">Istorija</button>
+              </div>
+              ${tab === 'overview' ? `
+                <div class="grid gap-4 lg:grid-cols-[1.5fr_1fr]">
+                  <div class="rounded-2xl border p-5">
+                    <div class="space-y-4">
+                      <div><div class="text-sm text-slate-500">Sutarties tikslas</div><div class="mt-1 font-medium">Automatizuotas duomenų teikimas analitikos ir ataskaitų rengimo tikslams</div></div>
+                      <div class="grid gap-4 md:grid-cols-2">
+                        <div><div class="text-sm text-slate-500">Teisinis pagrindas</div><div class="mt-1 font-medium">Viešojo administravimo funkcijų vykdymas</div></div>
+                        <div><div class="text-sm text-slate-500">Galiojimas iki</div><div class="mt-1 font-medium">2026-12-31</div></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="rounded-2xl border p-5">
+                    <div class="space-y-4">
+                      <div><div class="text-sm text-slate-500">Kitas žingsnis</div><div class="mt-1 font-medium">Reikia peržiūrėti komentarus ir patvirtinti redakciją</div></div>
+                      <div><div class="text-sm text-slate-500">Atsakingas</div><div class="mt-1 font-medium">Martynas Mockus</div></div>
+                    </div>
+                  </div>
+                </div>` : ''}
+              ${tab === 'comments' ? `
+                <div class="grid gap-4 lg:grid-cols-[1.2fr_1.1fr]">
+                  <div class="rounded-2xl border p-5 space-y-4">
+                    <div class="text-sm text-slate-500">Komentuojama vieta</div>
+                    <div class="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">Prašome patikslinti duomenų gavimo periodiškumą ir saugojimo terminą, nes dabar nurodymas per daug bendrinis.</div>
+                    <div class="flex gap-2"><button class="rounded-2xl bg-slate-900 px-4 py-2 text-white">Pažymėti kaip išspręsta</button><button class="rounded-2xl border px-4 py-2">Grąžinti tikslinimui</button></div>
+                  </div>
+                  <div class="rounded-2xl border p-5 space-y-4">
+                    <div class="flex items-start justify-between gap-3 rounded-2xl border p-4"><div><div class="font-medium">Rasa Teisininkė</div><div class="text-sm text-slate-500">Prieš 12 min.</div></div><span class="rounded-full bg-slate-200 px-2.5 py-1 text-xs">Atvira</span></div>
+                    <div class="flex items-start justify-between gap-3 rounded-2xl border p-4"><div><div class="font-medium">Duomenų apsaugos specialistas</div><div class="text-sm text-slate-500">Vakar</div></div><span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs text-emerald-800">Resolved</span></div>
+                  </div>
+                </div>` : ''}
+              ${tab === 'documents' ? `
+                <div class="grid gap-4 md:grid-cols-2">
+                  ${["Sutarties projektas v0.8.pdf", "Priedas_nr_1.xlsx", "Derinimo_pastabos.docx"].map((doc) => `<div class="rounded-2xl border p-5 flex items-center justify-between"><div><div class="font-medium">${doc}</div><div class="text-sm text-slate-500">Atnaujinta šiandien</div></div><button class="rounded-2xl border px-4 py-2">Atidaryti</button></div>`).join('')}
+                </div>` : ''}
+              ${tab === 'history' ? `
+                <div class="space-y-3">
+                  ${[
+                    "2026-04-01 09:14 • Būsena pakeista į „Derinama“",
+                    "2026-03-31 16:20 • Įkeltas naujas sutarties projektas",
+                    "2026-03-31 14:48 • Gautas komentaras iš teisininko",
+                  ].map((line) => `<div class="rounded-2xl border p-4 text-sm text-slate-700">${line}</div>`).join('')}
+                </div>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function listView(mode) {
+      const titleMap = { action: "Laukia mano veiksmo", review: "Derinamos sutartys", urgent: "Skubūs atvejai", drafts: "Mano juodraščiai" };
+      if (mode === 'drafts') {
+        return `
+          <div class="space-y-6">
+            <div><button onclick="goHome()" class="mb-2 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">← Atgal į dashboard</button><h2 class="text-3xl font-semibold tracking-tight">${titleMap[mode]}</h2></div>
+            <div class="grid gap-4 md:grid-cols-2">
+              ${draftsSeed.map((draft) => `<div class="rounded-3xl bg-white p-5 shadow-sm"><div class="space-y-4"><div><div class="font-medium">${draft.title}</div><div class="text-sm text-slate-500">${draft.id} • ${draft.step}</div></div><div class="h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-slate-900" style="width:${draft.completion}%"></div></div><button onclick="openDraft('${draft.id}')" class="rounded-2xl bg-slate-900 px-4 py-2 text-white">Tęsti pildymą</button></div></div>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+      const items = tasksSeed.filter((task) => mode === 'urgent' ? task.urgent : mode === 'review' ? task.status === 'Derinama' : true);
+      return `
+        <div class="space-y-6">
+          <div><button onclick="goHome()" class="mb-2 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">← Atgal į dashboard</button><h2 class="text-3xl font-semibold tracking-tight">${titleMap[mode] || 'Sąrašas'}</h2></div>
+          <div class="space-y-3">
+            ${items.map((task) => `<div class="rounded-3xl bg-white p-5 shadow-sm"><div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between"><div><div class="font-medium">${task.id} • ${task.title}</div><div class="mt-2 flex gap-2"><span class="rounded-full px-2.5 py-1 text-xs font-medium ${statusTone(task.status)}">${task.status}</span><span class="rounded-full px-2.5 py-1 text-xs font-medium ${badgeTone(task.priority)}">${task.priority}</span></div></div><button onclick="openContract('${task.id}','${mode === 'action' ? 'comments' : 'overview'}')" class="rounded-2xl bg-slate-900 px-4 py-2 text-white">Atidaryti</button></div></div>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function wizardView(source, draftId) {
+      const sourceTitle = { blank: 'Nauja sutartis nuo nulio', template: 'Nauja sutartis pagal šabloną', copy: 'Nauja sutartis pagal ankstesnę', draft: `Tęsiamas juodraštis ${draftId}` };
+      return `
+        <div class="space-y-6">
+          <div><button onclick="goHome()" class="mb-2 flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800">← Atgal</button><h2 class="text-3xl font-semibold tracking-tight">${sourceTitle[source]}</h2><p class="mt-1 text-slate-500">Vedlio 1 žingsnis – pagrindinė informacija</p></div>
+          <div class="grid gap-4 xl:grid-cols-[260px_1fr_320px]">
+            <div class="rounded-3xl bg-white p-5 shadow-sm"><h3 class="text-lg font-semibold">Žingsniai</h3><div class="mt-4 space-y-3 text-sm">${['1. Pagrindinė informacija','2. Duomenų poreikis','3. Saugumo sąlygos','4. Šalys ir kontaktai','5. Priedai','6. Peržiūra'].map((step, index) => `<div class="rounded-2xl px-3 py-2 ${index === 0 ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'}">${step}</div>`).join('')}</div></div>
+            <div class="rounded-3xl bg-white p-5 shadow-sm"><h3 class="text-lg font-semibold">Pagrindinė informacija</h3><div class="mt-4 grid gap-4 md:grid-cols-2"><div class="rounded-2xl border p-4"><div class="text-sm text-slate-500">Sutarties tipas</div><div class="mt-1 font-medium">Išmani duomenų teikimo sutartis</div></div><div class="rounded-2xl border p-4"><div class="text-sm text-slate-500">Organizacija</div><div class="mt-1 font-medium">VSSA DAS skyrius</div></div><div class="rounded-2xl border p-4 md:col-span-2"><div class="text-sm text-slate-500">Sutarties tikslas</div><div class="mt-1 font-medium">Automatizuoti reguliaraus duomenų teikimo procesą ir sumažinti rankinį derinimą.</div></div>${source === 'template' ? `<div class="rounded-2xl border p-4 md:col-span-2"><div class="text-sm text-slate-500">Pasirinktas šablonas</div><div class="mt-1 font-medium">${templates[0]}</div></div>` : ''}</div></div>
+            <div class="rounded-3xl bg-white p-5 shadow-sm"><h3 class="text-lg font-semibold">Kontekstinė pagalba</h3><div class="mt-4 space-y-3 text-sm text-slate-600"><div class="rounded-2xl bg-slate-50 p-4">Rodyti tik būtinus laukus pirmajam testavimo ratui.</div><div class="rounded-2xl bg-slate-50 p-4">Tikslas – patikrinti, ar vartotojas supranta vedlio pradžią ir kitą žingsnį.</div></div></div>
+          </div>
+          <div class="flex flex-wrap justify-between gap-3"><button onclick="goHome()" class="rounded-2xl border px-4 py-2">Išsaugoti juodraštį</button><div class="flex gap-2"><button onclick="goHome()" class="rounded-2xl border px-4 py-2">Atšaukti</button><button onclick="openContract('DUOM-123','overview')" class="rounded-2xl bg-slate-900 px-4 py-2 text-white">Toliau į peržiūrą</button></div></div>
+        </div>
+      `;
+    }
+
+    function setActiveView(view) { state.activeView = view; render(); }
+    function toggleUrgent() { state.onlyUrgent = !state.onlyUrgent; render(); }
+    function onKpiClick(key) {
+      if (key === 'drafts') openList('drafts');
+      if (key === 'action') openList('action');
+      if (key === 'review') openList('review');
+      if (key === 'deadline') { state.activeView = 'urgent'; state.onlyUrgent = true; openList('urgent'); }
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+      if (state.route.screen === 'dashboard') app.innerHTML = dashboardView();
+      if (state.route.screen === 'contract') app.innerHTML = contractView(state.route.contractId, state.route.tab);
+      if (state.route.screen === 'list') app.innerHTML = listView(state.route.mode);
+      if (state.route.screen === 'wizard') app.innerHTML = wizardView(state.route.source, state.route.draftId);
+    }
+
+    document.getElementById('homeBtn').addEventListener('click', goHome);
+    document.getElementById('searchInput').addEventListener('input', (e) => { state.search = e.target.value; if (state.route.screen === 'dashboard') render(); });
+
+    render();
+  </script>
+</body>
+</html>
