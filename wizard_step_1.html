@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="lt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nauja sutartis – 1 žingsnis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-950" style="font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+  <div class="mx-auto max-w-7xl p-6 md:p-8">
+    <header class="mb-6 rounded-3xl border bg-white p-4 shadow-sm flex items-center justify-between gap-4">
+      <a href="index.html" class="flex items-center gap-3"><div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white"><span class="text-sm font-bold">DG</span></div><div><div class="text-sm text-slate-500">data.gov.lt</div><h1 class="text-2xl font-semibold tracking-tight">Nauja sutartis</h1></div></a>
+      <a href="index.html" class="rounded-2xl border px-4 py-2 text-sm">← Atgal</a>
+    </header>
+
+    <div class="space-y-6">
+      <div>
+        <h2 class="text-3xl font-semibold tracking-tight">Nauja sutartis nuo nulio</h2>
+        <p class="mt-1 text-slate-500">Vedlio 1 žingsnis – pagrindinė informacija</p>
+      </div>
+
+      <div class="grid gap-4 xl:grid-cols-[260px_1fr_320px]">
+        <div class="rounded-3xl bg-white p-5 shadow-sm">
+          <h3 class="text-lg font-semibold">Žingsniai</h3>
+          <div class="mt-4 space-y-3 text-sm">
+            <div class="rounded-2xl bg-slate-900 px-3 py-3 text-white">1. Pagrindinė informacija</div>
+            <div class="rounded-2xl bg-slate-100 px-3 py-3 text-slate-700">2. Duomenų poreikis</div>
+            <div class="rounded-2xl bg-slate-100 px-3 py-3 text-slate-700">3. Saugumo sąlygos</div>
+            <div class="rounded-2xl bg-slate-100 px-3 py-3 text-slate-700">4. Šalys ir kontaktai</div>
+            <div class="rounded-2xl bg-slate-100 px-3 py-3 text-slate-700">5. Priedai</div>
+            <div class="rounded-2xl bg-slate-100 px-3 py-3 text-slate-700">6. Peržiūra</div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl bg-white p-5 shadow-sm">
+          <div class="mb-5 border-b pb-4">
+            <h3 class="text-lg font-semibold">Pagrindinė informacija</h3>
+            <p class="mt-1 text-sm text-slate-500">Bazinis sutarties kontekstas ir inicijavimo informacija.</p>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <label class="block"><div class="mb-2 text-sm font-medium text-slate-700">Sutarties tipas</div><input value="Išmani duomenų teikimo sutartis" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" readonly /></label>
+            <label class="block"><div class="mb-2 text-sm font-medium text-slate-700">Organizacija</div><input value="VSSA DAS skyrius" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" readonly /></label>
+            <label class="block md:col-span-2"><div class="mb-2 text-sm font-medium text-slate-700">Teisinis pagrindas</div><input value="Viešojo administravimo funkcijų vykdymas" class="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" readonly /></label>
+            <label class="block md:col-span-2"><div class="mb-2 text-sm font-medium text-slate-700">Sutarties tikslas</div><textarea class="min-h-[120px] w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm" readonly>Automatizuoti reguliaraus duomenų teikimo procesą ir sumažinti rankinį derinimą.</textarea></label>
+          </div>
+        </div>
+
+        <div class="rounded-3xl bg-white p-5 shadow-sm">
+          <h3 class="text-lg font-semibold">Kontekstinė pagalba</h3>
+          <div class="mt-4 space-y-3 text-sm text-slate-600">
+            <div class="rounded-2xl bg-slate-50 p-4">Vedlys skirtas pirmajam vartotojų testavimo ratui, todėl rodomi tik svarbiausi laukai.</div>
+            <div class="rounded-2xl bg-slate-50 p-4">Toliau galėsime kiekvieną žingsnį perkelti į atskirą HTML failą.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap justify-between gap-3">
+        <button class="rounded-2xl border px-4 py-2 opacity-40">Atgal</button>
+        <div class="flex gap-2">
+          <a href="index.html" class="rounded-2xl border px-4 py-2">Išsaugoti juodraštį</a>
+          <a href="wizard-step-2.html" class="rounded-2xl bg-slate-900 px-4 py-2 text-white">Toliau</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
